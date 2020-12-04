@@ -63,13 +63,6 @@ const writeRecordsToDynamoDb = async (cumulusMessage) => {
   return results;
 };
 
-/**
- * Write records
- *
- * @param {Object} cumulusMessage - A workflow message
- * @param {Knex} knex - Client to interact with Postgres database
- * @returns {Promise<Object[]>}
- */
 const writeRecords = async (cumulusMessage, knex) => {
   const executionArn = getMessageExecutionArn(cumulusMessage);
 
