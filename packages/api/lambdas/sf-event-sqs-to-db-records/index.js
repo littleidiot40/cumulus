@@ -16,6 +16,7 @@ const {
 const Execution = require('../../models/executions');
 const Granule = require('../../models/granules');
 const Pdr = require('../../models/pdrs');
+const Rule = require('../../models/rules');
 const { getCumulusMessageFromExecutionEvent } = require('../../lib/cwSfExecutionEventUtils');
 
 const {
@@ -36,15 +37,21 @@ const {
   writeGranules,
 } = require('./write-granules');
 
+const {
+  writeRules,
+} = require('./write-rules');
+
 const writeRecordsToDynamoDb = async (cumulusMessage) => {
   const executionModel = new Execution();
   const pdrModel = new Pdr();
   const granuleModel = new Granule();
+  const ruleModel = new Rule();
 
   const results = await Promise.allSettled([
     executionModel.storeExecutionFromCumulusMessage(cumulusMessage),
     pdrModel.storePdrFromCumulusMessage(cumulusMessage),
     granuleModel.storeGranulesFromCumulusMessage(cumulusMessage),
+    ruleModel.storeRulesFromCumulusMessage(cumulusMessage),
   ]);
   const failures = results.filter((result) => result.status === 'rejected');
   if (failures.length > 0) {
@@ -75,6 +82,12 @@ const writeRecords = async (cumulusMessage, knex) => {
   const providerCumulusId = await getMessageProviderCumulusId(cumulusMessage, knex);
 
   try {
+    await writeRules({
+      cumulusMessage,
+      collectionCumulusId,
+      providerCumulusId,
+      knex,
+    });
     const executionCumulusId = await writeExecution({
       cumulusMessage,
       knex,
